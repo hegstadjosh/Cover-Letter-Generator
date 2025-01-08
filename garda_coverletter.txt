@@ -1,0 +1,12 @@
+Dear Hiring Team,
+
+I have experience with Java, C#, C++, SQL (Postgres), and Excel. I'm loading up on math courses so that I can pursue quantitative, data-driven roles in the future. While I don't have previous experience in finance, I am seriously considering it as a career path.
+
+I am a no-nonsense hard worker looking for challenging software engineering opportunities that push me to adapt and learn quickly. My experience co-leading Columbia Space Initiative's software team has honed my ability to work effectively in high-pressure, collaborative environments. I regularly plan, organize, and communicate technical information to team members with varying levels of experience.
+
+This summer, I worked on multiple projects involving security and automation challenges, which included developing Excel workflow automation tools and working with SQL databases. I demonstrated strong problem-solving skills by analyzing complex systems and proposing creative solutions, while regularly presenting my work to stakeholders.
+
+My coursework in Advanced Programming, Databases, and Data Structures, combined with my practical experience in various programming languages, has prepared me well for enterprise software development. I am particularly drawn to Garda Capital Partners because it would allow me to apply my technical skills in a quantitative, fast-paced environment while learning about financial markets.
+
+Sincerely,
+Joshua Hegstad
