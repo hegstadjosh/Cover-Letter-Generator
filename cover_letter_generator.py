@@ -8,14 +8,12 @@ import os
 import json
 from typing import Dict, List, Tuple, Optional
 from database import DocumentDB
-from file_manager import FileManager
 
 # Load environment variables and initialize clients
 load_dotenv()
 client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 console = Console()
 db = DocumentDB()
-file_mgr = FileManager()
 
 class CoverLetterGenerator:
     def __init__(self):
@@ -339,70 +337,6 @@ def display_documents(doc_type: str):
     
     console.print(table)
 
-def import_document(doc_type: str):
-    """Import a document from file or manual input."""
-    import_type = Prompt.ask("Import from [1] file or [2] paste content", choices=["1", "2"])
-    
-    name = Prompt.ask(f"Enter a name for this {doc_type.replace('_', ' ')}")
-    content = ""
-    
-    if import_type == "1":
-        file_path = Prompt.ask("Enter the path to your file (supports .txt, .pdf, .md, .json, .yaml, .html)")
-        
-        # Check file type and validity
-        is_valid, file_type, error_msg = file_mgr.get_file_info(file_path)
-        if not is_valid:
-            console.print(f"[red]{error_msg}[/red]")
-            return False
-            
-        console.print(f"[yellow]Reading {file_type.upper()} file...[/yellow]")
-        content = file_mgr.import_file(file_path)
-        
-        if not content:
-            console.print(f"[red]Failed to read file: {file_path}[/red]")
-            return False
-            
-        if file_type == "pdf":
-            console.print("[green]Successfully extracted text from PDF[/green]")
-    else:
-        console.print(f"\nEnter/paste your {doc_type.replace('_', ' ')} content (press Ctrl+D or Ctrl+Z when done):")
-        lines = []
-        try:
-            while True:
-                line = input()
-                lines.append(line)
-        except EOFError:
-            content = "\n".join(lines)
-    
-    if not content.strip():
-        console.print("[red]Error: Empty content is not allowed[/red]")
-        return False
-    
-    metadata = {}
-    if doc_type == "job_description":
-        metadata["company"] = Prompt.ask("Enter company name")
-        metadata["position"] = Prompt.ask("Enter position title")
-    
-    # Save to database first
-    console.print("[yellow]Saving to database...[/yellow]")
-    if not db.save_document(doc_type, name, content, metadata):
-        console.print("[red]Failed to save document to database[/red]")
-        return False
-    
-    # Then save to file system
-    console.print("[yellow]Saving to file system...[/yellow]")
-    file_path = file_mgr.write_file(doc_type, name, content)
-    if not file_path:
-        console.print("[red]Failed to save document to file system[/red]")
-        # Consider rolling back the database save here
-        if db.delete_document(doc_type, name):
-            console.print("[yellow]Rolled back database save due to file system error[/yellow]")
-        return False
-    
-    console.print(f"\n[green]Successfully imported {doc_type.replace('_', ' ')}![/green]")
-    console.print(f"[green]Saved to: {file_path}[/green]")
-    return True
-
 def select_document(doc_type: str) -> Optional[Dict]:
     """Select a document from the available ones."""
     docs = db.list_documents(doc_type)
@@ -461,13 +395,39 @@ def main_menu():
             if sub_choice == "1":
                 display_documents(doc_type)
             elif sub_choice == "2":
-                import_document(doc_type)
+                name = Prompt.ask(f"Enter a name for this {doc_type.replace('_', ' ')}")
+                console.print(f"\nEnter/paste your {doc_type.replace('_', ' ')} content (press Ctrl+D or Ctrl+Z when done):")
+                lines = []
+                try:
+                    while True:
+                        line = input()
+                        lines.append(line)
+                except EOFError:
+                    content = "\n".join(lines)
+                
+                if not content.strip():
+                    console.print("[red]Error: Empty content is not allowed[/red]")
+                    continue
+                
+                metadata = {}
+                if doc_type == "job_description":
+                    metadata["company"] = Prompt.ask("Enter company name")
+                    metadata["position"] = Prompt.ask("Enter position title")
+                
+                # Save to database
+                console.print("[yellow]Saving to database...[/yellow]")
+                if not db.save_document(doc_type, name, content, metadata):
+                    console.print("[red]Failed to save document to database[/red]")
+                    continue
+                
+                console.print(f"\n[green]Successfully imported {doc_type.replace('_', ' ')}![/green]")
             elif sub_choice == "3":
                 doc = select_document(doc_type)
                 if doc and Confirm.ask(f"Are you sure you want to delete {doc['name']}?"):
-                    db.delete_document(doc_type, doc["name"])
-                    file_mgr.delete_file(doc_type, doc["name"])
-                    console.print("[green]Document deleted successfully![/green]")
+                    if db.delete_document(doc_type, doc["name"]):
+                        console.print("[green]Document deleted successfully![/green]")
+                    else:
+                        console.print("[red]Failed to delete document[/red]")
         
         elif choice == "4":
             console.print("\n=== Biography Management ===")
@@ -492,30 +452,14 @@ def main_menu():
                 current_bio = db.get_biography()
                 current_content = current_bio["content"] if current_bio else None
                 
-                # Get new content
-                import_type = Prompt.ask("Import from [1] file or [2] paste content", choices=["1", "2"])
-                new_content = ""
-                
-                if import_type == "1":
-                    file_path = Prompt.ask("Enter the path to your file")
-                    is_valid, file_type, error_msg = file_mgr.get_file_info(file_path)
-                    if not is_valid:
-                        console.print(f"[red]{error_msg}[/red]")
-                        continue
-                    
-                    new_content = file_mgr.import_file(file_path)
-                    if not new_content:
-                        console.print("[red]Failed to read file[/red]")
-                        continue
-                else:
-                    console.print("\nEnter/paste your content (press Ctrl+D or Ctrl+Z when done):")
-                    lines = []
-                    try:
-                        while True:
-                            line = input()
-                            lines.append(line)
-                    except EOFError:
-                        new_content = "\n".join(lines)
+                console.print("\nEnter/paste your content (press Ctrl+D or Ctrl+Z when done):")
+                lines = []
+                try:
+                    while True:
+                        line = input()
+                        lines.append(line)
+                except EOFError:
+                    new_content = "\n".join(lines)
                 
                 if not new_content.strip():
                     console.print("[red]Error: Empty content is not allowed[/red]")
@@ -535,13 +479,6 @@ def main_menu():
                 # Save the new version
                 if db.save_biography(updated_bio, notes):
                     console.print("[green]Biography updated successfully![/green]")
-                    
-                    # Also save to file system
-                    version_info = db.get_biography()  # Get the latest version
-                    if version_info:
-                        file_path = file_mgr.write_file("biography", f"version_{version_info['version']}", updated_bio)
-                        if file_path:
-                            console.print(f"[green]Saved to: {file_path}[/green]")
                 else:
                     console.print("[red]Failed to update biography[/red]")
             
@@ -645,9 +582,10 @@ def main_menu():
                         break
                 
                 if final_content:
-                    db.save_document("cover_letter", name, final_content)
-                    file_mgr.write_file("cover_letter", name, final_content)
-                    console.print("[green]Cover letter saved successfully![/green]")
+                    if db.save_document("cover_letter", name, final_content):
+                        console.print("[green]Cover letter saved to database successfully![/green]")
+                    else:
+                        console.print("[red]Failed to save cover letter to database[/red]")
                 else:
                     console.print("[red]Could not find final version in chat history.[/red]")
                     console.print("[yellow]Please copy and save the final version manually.[/yellow]")
@@ -749,8 +687,6 @@ def main_menu():
                             description = Prompt.ask("Enter prompt description (optional)", default=prompt["description"] or "")
                             if db.save_prompt(selected_name, new_content, description):
                                 console.print("[green]Prompt updated successfully![/green]")
-                                # Also save to file system
-                                file_mgr.write_file("prompts", selected_name, new_content)
                             else:
                                 console.print("[red]Failed to update prompt[/red]")
                 
@@ -777,8 +713,7 @@ def main_menu():
                         }
                         
                         for name, data in default_prompts.items():
-                            if db.save_prompt(name, data["content"], data["description"]):
-                                file_mgr.write_file("prompts", name, data["content"])
+                            db.save_prompt(name, data["content"], data["description"])
                         
                         console.print("[green]Prompts reset to default values![/green]")
 
@@ -851,8 +786,11 @@ def main_menu():
             
             # Save the generated cover letter
             name = Prompt.ask("Enter a name for this cover letter")
-            db.save_document("cover_letter", name, cover_letter)
-            file_mgr.write_file("cover_letter", name, cover_letter)
+            if db.save_document("cover_letter", name, cover_letter):
+                console.print("[green]Cover letter saved successfully![/green]")
+            else:
+                console.print("[red]Failed to save cover letter[/red]")
+                continue
             
             console.print("\n[green]Here's your generated cover letter:[/green]\n")
             console.print(Markdown(cover_letter))
@@ -983,10 +921,10 @@ Return exactly "VALID" if the response is good, or "INVALID" if the response con
         }
     }
     
-    # Save prompts to database and file system
+    # Save prompts to database only
     for name, data in default_prompts.items():
-        if db.save_prompt(name, data["content"], data["description"]):
-            file_mgr.write_file("prompts", name, data["content"])
+        if not db.save_prompt(name, data["content"], data["description"]):
+            console.print(f"[red]Failed to save default prompt: {name}[/red]")
 
 if __name__ == "__main__":
     # Initialize prompts if they don't exist

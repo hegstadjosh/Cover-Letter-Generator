@@ -3,7 +3,6 @@ from flask_cors import CORS
 import os
 from cover_letter_generator import CoverLetterGenerator
 from database import DocumentDB
-from file_manager import FileManager
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -14,7 +13,6 @@ CORS(app)  # Enable CORS for React frontend
 
 # Initialize our classes
 db = DocumentDB()
-file_mgr = FileManager()
 generator = CoverLetterGenerator()
 
 # Document Management Routes
@@ -44,18 +42,12 @@ def create_document(doc_type):
         return jsonify({"error": "Name and content are required"}), 400
     
     success = db.save_document(doc_type, name, content, metadata)
-    if success:
-        file_mgr.write_file(doc_type, name, content)
-        return jsonify({"success": True})
     return jsonify({"error": "Failed to save document"}), 500
 
 @app.route('/api/documents/<doc_type>/<name>', methods=['DELETE'])
 def delete_document(doc_type, name):
     """Delete a document."""
     success = db.delete_document(doc_type, name)
-    if success:
-        file_mgr.delete_file(doc_type, name)
-        return jsonify({"success": True})
     return jsonify({"error": "Failed to delete document"}), 500
 
 # Biography Routes
