@@ -374,4 +374,50 @@ class DocumentDB:
                 return cursor.rowcount > 0
         except Exception as e:
             print(f"Error deleting prompt: {e}")
+            return False
+
+    def initialize_default_prompts(self) -> bool:
+        """Initialize the default prompts in the database."""
+        default_prompts = {
+            "info_manager": {
+                "content": '''You are an expert at analyzing resumes...''',  # Full content from cover_letter_generator.py
+                "description": "Analyzes resumes and biographical information"
+            },
+            "job_analyzer": {
+                "content": '''You are an expert at analyzing job descriptions...''',  # Full content from cover_letter_generator.py
+                "description": "Analyzes job descriptions"
+            },
+            "alignment": {
+                "content": '''You are an expert at matching candidates...''',  # Full content from cover_letter_generator.py
+                "description": "Matches candidates with job requirements"
+            },
+            "validator": {
+                "content": '''You are a response validator...''',  # Full content from cover_letter_generator.py
+                "description": "Validates AI responses"
+            }
+        }
+        
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                
+                for name, data in default_prompts.items():
+                    cursor.execute('SELECT id FROM ai_prompts WHERE name = ?', (name,))
+                    if cursor.fetchone():
+                        cursor.execute('''
+                            UPDATE ai_prompts 
+                            SET content = ?, description = ?, updated_at = ?
+                            WHERE name = ?
+                        ''', (data["content"], data["description"], now, name))
+                    else:
+                        cursor.execute('''
+                            INSERT INTO ai_prompts (name, content, description, created_at, updated_at)
+                            VALUES (?, ?, ?, ?, ?)
+                        ''', (name, data["content"], data["description"], now, now))
+                
+                conn.commit()
+                return True
+        except Exception as e:
+            print(f"Error initializing default prompts: {e}")
             return False 

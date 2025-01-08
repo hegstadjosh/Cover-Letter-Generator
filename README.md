@@ -1,153 +1,167 @@
 # Cover Letter Generator
 
-## Overview
-
-A powerful command-line application that leverages OpenAI's GPT models to generate personalized, professional cover letters. The application analyzes your resume, job descriptions, and preferences to create tailored cover letters that highlight your most relevant qualifications.
+An AI-powered cover letter generator built with React, Flask, and OpenAI's GPT models. This application helps you create personalized cover letters by analyzing your resume, job descriptions, and previous cover letters.
 
 ## Features
 
-### Core Functionality
-- **Smart Resume Analysis**: Extracts key qualifications and achievements from your resume
-- **Job Description Analysis**: Identifies core requirements and preferred qualifications
-- **Profile Alignment**: Matches your experience with job requirements
-- **Custom Cover Letter Generation**: Creates tailored cover letters using your preferred style
-- **Biography Management**: Maintains a version-controlled professional biography
+-�� AI-powered cover letter generation using OpenAI's GPT models
+- 📄 Upload and manage resumes in various formats
+- 💼 Store and organize job descriptions
+- ✍️ Generate tailored cover letters using AI
+- 👤 Maintain a professional biography with version history
+- ⚙️ Customize AI prompts for different aspects of the generation process
+- 🎨 Modern, responsive UI built with Material-UI
+- 🔄 Version history for your professional biography
+- 📱 Mobile-friendly interface
 
-### Document Management
-- Import documents from various formats (PDF, TXT, MD, JSON, YAML, HTML)
-- Local SQLite database for efficient document storage and retrieval
-- Version control for biographical information
-- File-based backup system
+## Tech Stack
 
-### User Interface
-- Interactive command-line interface with rich text formatting
-- Clear menu-driven navigation
-- Real-time progress feedback
-- Markdown-formatted output
+- **Frontend**: React, TypeScript, Material-UI
+- **Backend**: Python, Flask
+- **Database**: SQLite
+- **AI**: OpenAI GPT API
+- **File Processing**: PyPDF2
 
 ## Prerequisites
 
 - Python 3.8 or higher
-- pip (Python package installer)
-- SQLite 3 (typically included with Python)
+- Node.js 14 or higher
 - OpenAI API key
+- Git
 
 ## Installation
 
-1. **Clone the Repository**
+1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/cover-letter-generator.git
+   git clone <repository-url>
    cd cover-letter-generator
    ```
 
-2. **Set Up Virtual Environment**
+2. Set up the backend:
    ```bash
-   # Windows
+   # Create and activate virtual environment
    python -m venv venv
-   venv\Scripts\activate
-
-   # macOS/Linux
-   python3 -m venv venv
+   
+   # On Windows:
+   .\venv\Scripts\activate
+   
+   # On Unix or MacOS:
    source venv/bin/activate
-   ```
-
-3. **Install Dependencies**
-   ```bash
+   
+   # Install dependencies
    pip install -r requirements.txt
+   
+   # Create .env file
+   cp .env.example .env
+   # Edit .env and add your OpenAI API key
    ```
 
-4. **Configure Environment**
-   Create a `.env` file in the project root:
-   ```
-   OPENAI_API_KEY=your_api_key_here
-   ```
-
-## Quick Start
-
-1. **Launch the Application**
+3. Set up the frontend:
    ```bash
-   python cover_letter_generator.py
+   cd frontend
+   npm install
    ```
 
-2. **Import Your Documents**
-   - Add your resume (PDF or text format)
-   - Import sample cover letters for style reference
-   - Add job descriptions
+## Running the Application
 
-3. **Generate a Cover Letter**
-   - Select your resume
-   - Choose a job description
-   - Pick a sample letter for style
-   - Add any specific preferences
-   - Generate and save your personalized cover letter
+1. Start the backend server (in the root directory):
+   ```bash
+   # Ensure virtual environment is activated
+   python main.py
+   ```
+   The backend server will run on http://localhost:5000
+
+2. Start the frontend development server (in the frontend directory):
+   ```bash
+   npm start
+   ```
+   The frontend will run on http://localhost:3000
 
 ## Project Structure
 
 ```
 cover-letter-generator/
-├── cover_letter_generator.py  # Main application logic
-├── database.py               # SQLite database management
-├── file_manager.py          # File I/O operations
-├── requirements.txt         # Project dependencies
-├── .env                    # Environment variables
-└── documents/              # Document storage
-    ├── resumes/
-    ├── cover_letters/
-    ├── job_descriptions/
-    └── biography/
+├── backend/
+│   ├── cover_letter_generator.py  # Core generation logic
+│   ├── database.py               # Database operations
+│   ├── file_manager.py          # File handling
+│   ├── main.py                  # Flask application
+│   └── requirements.txt         # Python dependencies
+├── frontend/
+│   ├── public/                  # Static assets
+│   ├── src/
+│   │   ├── components/         # React components
+│   │   ├── pages/             # Page components
+│   │   ├── services/          # API services
+│   │   └── utils/             # Utility functions
+│   ├── package.json           # Node dependencies
+│   └── tsconfig.json         # TypeScript config
+├── .env.example              # Example environment variables
+├── .gitignore               # Git ignore rules
+├── LICENSE                  # MIT license
+└── README.md               # Project documentation
 ```
 
-## Troubleshooting
+## Usage Guide
 
-### Common Issues
+1. **Initial Setup**:
+   - Add your OpenAI API key to the `.env` file
+   - Start both backend and frontend servers
 
-1. **OpenAI API Key Error**
-   - Verify your API key in the `.env` file
-   - Check if the API key has sufficient credits
-   - Ensure the `.env` file is in the project root
+2. **Resume Management**:
+   - Upload your resume(s) in PDF or DOCX format
+   - The system will parse and store your resume information
 
-2. **PDF Import Issues**
-   - Confirm the PDF is not password-protected
-   - Check if the PDF contains extractable text
-   - Try converting to text format if extraction fails
+3. **Job Description Management**:
+   - Add job descriptions you're applying for
+   - Tag and categorize job postings
 
-3. **Database Errors**
-   - Ensure SQLite is properly installed
-   - Check write permissions in the project directory
-   - Verify database file integrity
+4. **Cover Letter Generation**:
+   - Select your resume and job description
+   - Choose a writing style
+   - Add custom instructions if needed
+   - Generate and edit the cover letter
+   - Export to your preferred format
+
+5. **Biography Management**:
+   - Maintain your professional biography
+   - Track changes with version history
+   - Use it as additional context for generation
+
+## API Documentation
+
+### Documents API
+- `GET /api/documents/<doc_type>` - List all documents
+- `POST /api/documents/<doc_type>` - Upload new document
+- `GET /api/documents/<doc_type>/<id>` - Get specific document
+- `DELETE /api/documents/<doc_type>/<id>` - Delete document
+
+### Generation API
+- `POST /api/generate-cover-letter` - Generate cover letter
+- `GET /api/prompts` - Get generation prompts
+- `POST /api/prompts` - Update prompts
 
 ## Contributing
 
-Contributions are welcome! Here's how you can help:
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-1. **Report Issues**
-   - Use the issue tracker to report bugs
-   - Include detailed steps to reproduce the issue
-   - Attach relevant error messages
+## Troubleshooting
 
-2. **Submit Pull Requests**
-   - Fork the repository
-   - Create a feature branch
-   - Follow the existing code style
-   - Add tests for new features
-   - Update documentation
-
-3. **Improve Documentation**
-   - Fix typos or unclear instructions
-   - Add examples and use cases
-   - Translate documentation
+- **Backend won't start**: Check Python version and virtual environment activation
+- **Frontend build fails**: Ensure Node.js version is compatible and dependencies are installed
+- **Generation errors**: Verify OpenAI API key and rate limits
+- **File upload issues**: Check file permissions and supported formats
 
 ## License
 
-This project is open-source and available under the MIT License. See the LICENSE file for more details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 
-- OpenAI for providing the GPT API
-- Rich library for terminal formatting
-- PyPDF2 for PDF processing
-- All contributors and users of this project
-
----
-
-For additional support or questions, please open an issue on the project repository.
+- OpenAI for the GPT API
+- Material-UI for the component library
+- All contributors who have helped improve this project

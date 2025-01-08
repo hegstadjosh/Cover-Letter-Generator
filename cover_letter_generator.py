@@ -62,20 +62,34 @@ Is this a valid, helpful response? Reply with exactly VALID or INVALID."""}
         """Get completion from OpenAI API with validation and retries."""
         for attempt in range(self.max_retries):
             try:
+                print(f"\nAttempt {attempt + 1} - Sending request to OpenAI:")
+                print("Model:", model)
+                print("Messages:", json.dumps(messages, indent=2))
+                
                 response = client.chat.completions.create(
                     model=model,
                     messages=messages
                 )
                 result = response.choices[0].message.content
+                
+                print("\nReceived response from OpenAI:")
+                print("Raw response:", result[:500] + "..." if len(result) > 500 else result)
 
                 # Validate the response
+                print("\nValidating response...")
                 if self.validate_response(result, expected_format):
+                    print("Response validation: VALID")
                     return True, result
                 
+                print("Response validation: INVALID")
                 console.print(f"[yellow]Attempt {attempt + 1}: Invalid response detected. Retrying...[/yellow]")
                 continue
 
             except Exception as e:
+                print(f"\nError in attempt {attempt + 1}:")
+                print("Error type:", type(e).__name__)
+                print("Error message:", str(e))
+                
                 if attempt == self.max_retries - 1:
                     return False, str(e)
                 console.print(f"[yellow]Attempt {attempt + 1}: Error occurred. Retrying...[/yellow]")
